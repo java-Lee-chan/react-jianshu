@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
 import { CSSTransition } from 'react-transition-group';
+import { Link } from 'react-router-dom';
 import { actionCreators } from './store';
+import { actionCreators as loginActionCreators } from '../../pages/login/store';
 import {
   HeaderWrapper,
   Logo,
@@ -64,14 +65,23 @@ class Header extends Component {
   }
 
   render() {
-    const { focused, handleInputFocus, handleInputBlur, list } = this.props;
+    const { focused, handleInputFocus, handleInputBlur, list, login, logout } = this.props;
     return (
       <HeaderWrapper>
-        <Logo />
+        <Link to='/'>
+          <Logo />
+        </Link>
         <Nav>
           <NavItem className='left active'>首页</NavItem>
           <NavItem className='left'>下载App</NavItem>
-          <NavItem className='right'>登录</NavItem>
+          {
+            login ? 
+              <NavItem className='right' onClick={logout}>退出</NavItem> : (
+              <Link to='/login'>
+                <NavItem className='right'>登录</NavItem>
+              </Link>
+            )
+          }
           <NavItem className='right'>
             <span className="iconfont">&#xe636;</span>
           </NavItem>
@@ -96,28 +106,18 @@ class Header extends Component {
           </SearchWrapper>
         </Nav>
         <Addition>
-          <Button className='writting'>
-            <span className="iconfont write">&#xe6e5;</span>
-            写文章
-          </Button>
+          <Link to='/write'>
+            <Button className='writting'>
+              <span className="iconfont write">&#xe6e5;</span>
+              写文章
+            </Button>
+          </Link>
           <Button className='reg'>注册</Button>
         </Addition>
       </HeaderWrapper>
     )
   }
 }
-
-Header.propTypes = {
-  focused: PropTypes.bool.isRequired,
-  list: PropTypes.object.isRequired,
-  page: PropTypes.number.isRequired,
-  handleInputFocus: PropTypes.func.isRequired,
-  handleInputBlur: PropTypes.func.isRequired,
-  handleMouseEnter: PropTypes.func.isRequired,
-  handleMouseLeave: PropTypes.func.isRequired,
-  handleChangePage: PropTypes.func.isRequired
-}
-
 
 const mapStateToProps = state => {
   return {
@@ -126,41 +126,43 @@ const mapStateToProps = state => {
     page: state.getIn(['header', 'page']),
     mouseIn: state.getIn(['header', 'mouseIn']),
     totalPage: state.getIn(['header', 'totalPage']),
+    login: state.getIn(['login', 'login'])
   }
-}
+};
 
-const mapDispatchToProps = dispatch => {
-  return {
-    handleInputFocus(list) {
-      (list.size === 0) && dispatch(actionCreators.getList());
-      dispatch(actionCreators.searchFocus());
-    },
-    handleInputBlur() {
-      dispatch(actionCreators.searchBlur());
-    },
-    handleMouseEnter() {
-      dispatch(actionCreators.mouseEnter());
-    },
-    handleMouseLeave() {
-      dispatch(actionCreators.mouseLeave());
-    },
-    handleChangePage(page, totalPage, spinIcon) {
-      let  originAngle = spinIcon.style.transform.replace(/[^0-9]/ig, '');
-      if(originAngle) {
-        originAngle = parseInt(originAngle, 10);
-      }else {
-        originAngle = 0;
-      }
-      spinIcon.style.transform = `rotate(${originAngle + 360}deg)`;
-      
-      if(page < totalPage) {
-        dispatch(actionCreators.changePage(page + 1));
-      }else {
-        dispatch(actionCreators.changePage(1));
-      }
+const mapDispatchToProps = dispatch => ({
+  handleInputFocus(list) {
+    (list.size === 0) && dispatch(actionCreators.getList());
+    dispatch(actionCreators.searchFocus());
+  },
+  handleInputBlur() {
+    dispatch(actionCreators.searchBlur());
+  },
+  handleMouseEnter() {
+    dispatch(actionCreators.mouseEnter());
+  },
+  handleMouseLeave() {
+    dispatch(actionCreators.mouseLeave());
+  },
+  handleChangePage(page, totalPage, spinIcon) {
+    let  originAngle = spinIcon.style.transform.replace(/[^0-9]/ig, '');
+    if(originAngle) {
+      originAngle = parseInt(originAngle, 10);
+    }else {
+      originAngle = 0;
     }
+    spinIcon.style.transform = `rotate(${originAngle + 360}deg)`;
+    
+    if(page < totalPage) {
+      dispatch(actionCreators.changePage(page + 1));
+    }else {
+      dispatch(actionCreators.changePage(1));
+    }
+  },
+  logout() {
+    dispatch(loginActionCreators.logout());
   }
-}
+});
 
 export default connect(
   mapStateToProps,
